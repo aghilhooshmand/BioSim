@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  # Streamlit Web App Service
+  biosim_web:
+    build: .
+    ports:
+      - "8601:8601"  # Map Streamlit's default port to the host machine
+    volumes:
+      - .:/app  # Mounts the current directory to the container for real-time changes
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: ["streamlit", "run", "BioSimilarity_interface.py"]  # Default Streamlit command
+
+  # Command-Line App Service
+  biosim_cmd:
+    build: .
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: ["python", "BioSimilarity.py"]
+    stdin_open: true
+    tty: true
+
+# Optional: volumes and networks can be defined here if necessary

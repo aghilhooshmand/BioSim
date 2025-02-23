@@ -1,0 +1,6 @@
+cbioportal_feature_name	cbioportal_feature_desc
+ONCOTREE_CODE	Oncotree Code
+OS_MONTHS	Overall survival in months since date of sequencing. If patient died before sequencing overall survival in months is set to '0'. If patient is alive and last contact date is before date of sequencing, overall survival in months is set to 'NA'
+OS_STATUS	Overall patient survival status.
+PED_IND	Indication on whether this case is a pediatric patient or not
+PRIMARY_SITE	Text term to describe the organ sub-division in an individual with cancer.
