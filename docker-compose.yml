@@ -10,7 +10,9 @@ services:
       - .:/app  # Mounts the current directory to the container for real-time changes
     environment:
       - PYTHONUNBUFFERED=1
-    command: ["streamlit", "run", "BioSimilarity_interface.py"]  # Default Streamlit command
+      - "8601:8601"  # Ensure Docker maps external 8601 to container 8601
+    command: streamlit run BioSimilarity_interface.py --server.port=8601 --server.address=0.0.0.0
+
 
   # Command-Line App Service
   biosim_cmd:
