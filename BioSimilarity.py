@@ -7,6 +7,7 @@ import torch.nn.functional as F
 import sys,os,tqdm
 from tqdm.auto import tqdm
 
+
 #Append two columns that are going to be compared
 def choose_columns_for_calculate_similarity(df_pairs: pd.DataFrame, df1_col: str, df2_col: str) -> pd.DataFrame:
     concatenated_value = f"{df1_col};{df2_col}"
@@ -15,7 +16,7 @@ def choose_columns_for_calculate_similarity(df_pairs: pd.DataFrame, df1_col: str
     return df_pairs
 
 #Calculate similarity between two columns
-def sentence_similarity_by_torch_BioLORD(s1: list, s2: list,max_number_similarity:int) -> pd.DataFrame:
+def sentence_similarity_by_torch_BioLORD(s1: list, s2: list,max_number_similarity:int,all_calculations:int,calculations_done:int):
     # Load model
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     tokenizer = AutoTokenizer.from_pretrained('FremyCompany/BioLORD-STAMB2-v1', cache_dir="bioSim_model/")
@@ -28,7 +29,6 @@ def sentence_similarity_by_torch_BioLORD(s1: list, s2: list,max_number_similarit
         return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
 
     result = pd.DataFrame(columns=['s1', 's2', 'similarity'])
-    print("Similarity calculations should be performed for the two list of sentences [{}, {}]. Therefore, it will calculate overall: {}".format(len(s1), len(s2), len(s1) * len(s2)))
     count=0
     for i in s1:
         for j in s2:
@@ -49,23 +49,32 @@ def sentence_similarity_by_torch_BioLORD(s1: list, s2: list,max_number_similarit
                 similarity = util.cos_sim(sentence_embeddings[0], sentence_embeddings[1]).cpu().data.numpy()[0][0]
                 result.loc[len(result)] = [i, j, np.round(similarity, 2)]
                 count+=1
+                calculations_done+=1
+                print(f"Calculations done: {calculations_done}/{all_calculations} ({(calculations_done/all_calculations)*100:.2f}% completed)")
                 if count==max_number_similarity:
-                    return result
+                    return result,calculations_done
             except Exception as e:
                 print(f"Error processing pair ({i}, {j}): {e}")
                 result.loc[len(result)] = [i, j, None]
-    return result
+    return result,calculations_done
 
 
 
 def get_similarity(data_source: pd.DataFrame, data_target: pd.DataFrame, column_pairs: pd.DataFrame,max_number_pair:int=2,max_number_similarity:int=5) -> pd.DataFrame:
     All_similarity = pd.DataFrame()
+    calculations_done=0
+    all_calculations=0
+    for i in column_pairs.index:
+        all_calculations=all_calculations+len(data_source)*len(data_target)
     count=0
     for i in column_pairs.index:
+        print("...........................................")     
+        print(f"Processing pair {i+1}/{len(column_pairs)} ...")
+        print("...........................................")
         col_x, col_y = column_pairs.iloc[i].values[0].split(";")
         s1 = data_source[col_x].fillna("").tolist()
         s2 = data_target[col_y].fillna("").tolist()
-        similarity_df = sentence_similarity_by_torch_BioLORD(s1, s2,max_number_similarity)
+        similarity_df,calculations_done = sentence_similarity_by_torch_BioLORD(s1, s2,max_number_similarity,all_calculations,calculations_done)
         similarity_df.columns = [f"{col_x}_{i}" , f"{col_y}_{i}" ,f"Similarity( {col_x} - {col_y} )"]
         All_similarity = pd.concat([All_similarity, similarity_df], axis=1)
         count+=1
@@ -86,12 +95,13 @@ def main():
         if len(sys.argv) > 4 and sys.argv[4]:
             max_number_pair = int(sys.argv[4])
         else:
-            max_number_pair = 2
+            max_number_pair = len(data_column_pairs)
         if len(sys.argv) > 5 and sys.argv[5]:
             max_number_similarity = int(sys.argv[5])
         else:
-            max_number_similarity = 5   
-            
+            max_number_similarity = 0
+            for i in data_column_pairs.index:
+                 max_number_similarity=max_number_similarity+len(data_source)*len(data_target)    
         result = get_similarity(data_source, data_target, data_column_pairs,max_number_pair,max_number_similarity)
         result.to_csv(current_working_directory + '/' + 'result.csv', sep='\t', index=False)
     
