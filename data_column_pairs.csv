@@ -1,3 +1,5 @@
 pairs
-club_feature_name;cbioportal_feature_name
-club_feature_name;cbioportal_feature_name
+clinical feature;clinical feature
+clinical feature;description
+description;description
+Default value;Default value

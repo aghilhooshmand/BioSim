@@ -37,17 +37,21 @@ def sentence_similarity_by_torch_BioLORD(s1: list, s2: list,max_number_similarit
                 continue
             try:
                 sentences = [i, j]
-                # Tokenize sentences
-                encoded_input = tokenizer(sentences, padding=True, truncation=True, return_tensors='pt').to(device)
-                # Compute token embeddings
-                with torch.no_grad():
-                    model_output = model(**encoded_input)
-                # Perform pooling
-                sentence_embeddings = mean_pooling(model_output, encoded_input['attention_mask'])
-                # Normalize embeddings
-                sentence_embeddings = F.normalize(sentence_embeddings, p=2, dim=1)
-                similarity = util.cos_sim(sentence_embeddings[0], sentence_embeddings[1]).cpu().data.numpy()[0][0]
-                result.loc[len(result)] = [i, j, np.round(similarity, 2)]
+                if i==" " or j==" " :
+                    result.loc[len(result)] = [i, j, 0]
+                else :    
+                    # Tokenize sentences
+                    encoded_input = tokenizer(sentences, padding=True, truncation=True, return_tensors='pt').to(device)
+                    # Compute token embeddings
+                    with torch.no_grad():
+                        model_output = model(**encoded_input)
+                    # Perform pooling
+                    sentence_embeddings = mean_pooling(model_output, encoded_input['attention_mask'])
+                    # Normalize embeddings
+                    sentence_embeddings = F.normalize(sentence_embeddings, p=2, dim=1)
+                    similarity = util.cos_sim(sentence_embeddings[0], sentence_embeddings[1]).cpu().data.numpy()[0][0]
+                    
+                    result.loc[len(result)] = [i, j, np.round(similarity, 2)]
                 count+=1
                 calculations_done+=1
                 print(f"Calculations done: {calculations_done}/{all_calculations} ({(calculations_done/all_calculations)*100:.2f}% completed)")
@@ -72,8 +76,8 @@ def get_similarity(data_source: pd.DataFrame, data_target: pd.DataFrame, column_
         print(f"Processing pair {i+1}/{len(column_pairs)} ...")
         print("...........................................")
         col_x, col_y = column_pairs.iloc[i].values[0].split(";")
-        s1 = data_source[col_x].fillna("").tolist()
-        s2 = data_target[col_y].fillna("").tolist()
+        s1 = data_source[col_x].fillna(" ").tolist()
+        s2 = data_target[col_y].fillna(" ").tolist()
         similarity_df,calculations_done = sentence_similarity_by_torch_BioLORD(s1, s2,max_number_similarity,all_calculations,calculations_done)
         similarity_df.columns = [f"{col_x}_{i}" , f"{col_y}_{i}" ,f"Similarity( {col_x} - {col_y} )"]
         All_similarity = pd.concat([All_similarity, similarity_df], axis=1)
