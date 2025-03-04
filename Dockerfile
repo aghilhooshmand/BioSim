@@ -14,4 +14,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 # EXPOSE 8501
 
 # Default command to run the Streamlit app (you can change this later based on the Compose config)
-CMD ["streamlit", "run", "BioSimilarity_interface.py"]
+CMD ["streamlit", "run", "map_of_similarity.py"]

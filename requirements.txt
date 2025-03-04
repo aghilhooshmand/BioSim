@@ -2,3 +2,4 @@ pandas==2.2.3
 sentence-transformers==3.4.1
 torch==2.6.0
 transformers==4.49.0
+plotly==6.0.0
