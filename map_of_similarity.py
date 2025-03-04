@@ -1,11 +1,24 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import tarfile
 
 # Function to load data
 @st.cache_data
 def load_data():
-    return pd.read_csv('bioSim_model/cBioPortal_clinical_features_and_values_all_data_similarity.csv', 
+    def extract_tar_xz(file_path, output_dir):
+        """Extracts a .tar.xz archive to the specified output directory."""
+        try:
+            with tarfile.open(file_path, "r:xz") as tar:
+                tar.extractall(path=output_dir)
+                print(f"Extracted '{file_path}' to '{output_dir}' successfully.")
+        except Exception as e:
+            print(f"Error extracting '{file_path}': {e}")
+
+    # Example Usage
+    extract_tar_xz("cBioPortal_clinical_features_and_values_all_data_similarity.tar.xz", ".")
+    
+    return pd.read_csv('cBioPortal_clinical_features_and_values_all_data_similarity.csv', 
                        on_bad_lines='skip', delimiter='\t')
 
 # Function to filter data based on sidebar selections
