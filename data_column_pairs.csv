@@ -1,4 +1,5 @@
 pairs
-clinical feature;clinical feature
-clinical feature;description
+clinical_feature;clinical_feature
+clinical_feature;description
 description;description
+Default_value;Default_value

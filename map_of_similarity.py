@@ -16,9 +16,9 @@ def load_data():
             print(f"Error extracting '{file_path}': {e}")
 
     # Example Usage
-    extract_tar_xz("cBioPortal_clinical_features_and_values_all_data_similarity.tar.xz", ".")
+    extract_tar_xz("cBioPortal_clinical_features_and_values_all_data_similarity_Breast.tar.xz", ".")
     
-    return pd.read_csv('cBioPortal_clinical_features_and_values_all_data_similarity.csv', 
+    return pd.read_csv('cBioPortal_clinical_features_and_values_all_data_similarity_Breast.csv', 
                        on_bad_lines='skip', delimiter='\t')
 
 # Function to filter data based on sidebar selections
@@ -28,14 +28,14 @@ def filter_data(data):
     cancer_colors = st.sidebar.multiselect('Cancer Colors', data['cancer_color'].unique())
     cancer_types = st.sidebar.multiselect('Cancer Types', data['cancer_type'].unique())
     data_types = st.sidebar.multiselect('Data Types', data['data_type'].unique())
-    patient_samples = st.sidebar.multiselect('Patient or Sample', data['patient_or_sample'].unique())
+    patient_samples = st.sidebar.multiselect('Patient or Sample', data['patient_sample'].unique())
 
     # Use all values if none selected
     clinical_features = clinical_features or data['clinical_feature_0'].unique()
     cancer_colors = cancer_colors or data['cancer_color'].unique()
     cancer_types = cancer_types or data['cancer_type'].unique()
     data_types = data_types or data['data_type'].unique()
-    patient_samples = patient_samples or data['patient_or_sample'].unique()
+    patient_samples = patient_samples or data['patient_sample'].unique()
 
     # Similarity sliders
     st.sidebar.header('Similarity Measures')
@@ -51,11 +51,11 @@ def filter_data(data):
         (data['cancer_color'].isin(cancer_colors)) &
         (data['cancer_type'].isin(cancer_types)) &
         (data['data_type'].isin(data_types)) &
-        (data['patient_or_sample'].isin(patient_samples)) &
-        (data['Similarity( clinical feature - clinical feature )'].between(*similarity_cf_cf)) &
-        (data['Similarity( clinical feature - description )'].between(*similarity_cf_desc)) &
+        (data['patient_sample'].isin(patient_samples)) &
+        (data['Similarity( clinical_feature - clinical_feature )'].between(*similarity_cf_cf)) &
+        (data['Similarity( clinical_feature - description )'].between(*similarity_cf_desc)) &
         (data['Similarity( description - description )'].between(*similarity_desc_desc)) &
-        (data['Similarity( Default value - Default value )'].between(*similarity_default)) &
+        (data['Similarity( Default_value - Default_value )'].between(*similarity_default)) &
         (data['Average'].between(*average_similarity))
     ]
 
@@ -104,7 +104,7 @@ def main():
 
     # Display components
     display_table(filtered_data)
-    display_heatmap(filtered_data)
+    #display_heatmap(filtered_data)
     display_scatter_plot(filtered_data)
 
 # Run app

@@ -1,4 +1,4 @@
-clinical feature	cancer color	cancer type	data type	description	patient or sample	Default value
+clinical_feature	cancer_color	cancer_type	data_type	description	patient_sample	Default_value
 ADJUVANT_CHEMO	HotPink	Adenoid Cystic Carcinoma of the Breast (MSK, J Pathol. 2015)	STRING	Adjuvant Chemotherapy	Patient	
 ADJUVANT_TX	HotPink	Adenoid Cystic Carcinoma of the Breast (MSK, J Pathol. 2015)	STRING	Adjuvant treatment.	Patient	
 AGE	HotPink	Adenoid Cystic Carcinoma of the Breast (MSK, J Pathol. 2015)	NUMBER	Age at which a condition or disease was first diagnosed.	Patient	

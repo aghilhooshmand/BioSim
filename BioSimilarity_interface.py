@@ -56,8 +56,8 @@ if uploaded_file1 and (uploaded_file2 or use_cbioportal_features):
 
         # Load the second dataset based on user choice
         if use_cbioportal_features:
-            df2 = pd.read_csv("cBioPortal_clinical_features_and_values.csv",delimiter='\t', on_bad_lines='skip')
-            st.success("Loaded cBioPortal_clinical_features_and_values.csv successfully!")
+            df2 = pd.read_csv("cBioPortal_clinical_features.csv",delimiter='\t', on_bad_lines='skip')
+            st.success("Loaded cBioPortal_clinical_features.csv successfully!")
         else:
             df2 = pd.read_csv(uploaded_file2, delimiter='\t', on_bad_lines='skip')
 
@@ -78,9 +78,13 @@ if uploaded_file1 and (uploaded_file2 or use_cbioportal_features):
         # Button to add column pairs
         if st.button("➕ Add Pair", key="add_pair_button"):
             new_row = {"Pairs": col1 + ";" + col2}
-            st.session_state.data_column_pairs = pd.concat(
-                [st.session_state.data_column_pairs, pd.DataFrame([new_row])], ignore_index=True
-            )
+            if new_row["Pairs"] in st.session_state.data_column_pairs["Pairs"].values:
+                st.error("Pair must be unique. This pair already exists.")
+            else:
+                st.session_state.data_column_pairs = pd.concat(
+                    [st.session_state.data_column_pairs, pd.DataFrame([new_row])], ignore_index=True
+                )
+
 
         # Display selected column pairs
         st.write("### Selected Column Pairs:")
@@ -91,17 +95,78 @@ if uploaded_file1 and (uploaded_file2 or use_cbioportal_features):
             st.session_state.data_column_pairs = pd.DataFrame(columns=["Pairs"])
             st.rerun()
 
-# Similarity Calculation Section
-with st.expander("🔬 Calculate Similarity", expanded=True):
-    if st.button("⚙️ Calculate Similarity", key="calculate_similarity_button"):
+    # Similarity Calculation Section
+    with st.expander("🔬 Calculate Similarity", expanded=True):
         if not st.session_state.data_column_pairs.empty:
-            # Calculate similarity
-            similarity_results = get_similarity(df1, df2, st.session_state.data_column_pairs,2,5)
+            # Add text boxes for user input with default values
+            user_max_number_pair = st.number_input(
+                "Enter maximum number of pairs to consider:",
+                min_value=1,
+                value=len(st.session_state.data_column_pairs),
+                step=1,
+                key="user_max_number_pair"
+            )
+            user_max_number_df1 = st.number_input(
+                "Enter maximum number of rows to consider from the first CSV file:",
+                min_value=1,
+                value=len(df1),
+                step=1,
+                key="user_max_number_df1"
+            )
+            user_max_number_df2 = st.number_input(
+                "Enter maximum number of rows to consider from the second CSV file:",
+                min_value=1,
+                value=len(df2),
+                step=1,
+                key="user_max_number_df2"
+            )
 
-            # Display similarity results
-            st.write("### Similarity Results:")
-            st.write(similarity_results)
+            # Similarity button to start processing
+            if st.button("⚙️ Calculate Similarity", key="calculate_similarity_button"):
+                with st.spinner("Processing similarity calculations..."):
+                    similarity_results = get_similarity(
+                        df1.head(user_max_number_df1),
+                        df2.head(user_max_number_df2),
+                        st.session_state.data_column_pairs,
+                        user_max_number_pair,
+                        user_max_number_df1 * user_max_number_df2
+                    )
+                st.success("Similarity calculation completed!")
+                st.session_state.similarity_results = similarity_results  # Store results in session state
+                # st.write("### Similarity Results:")
+                # st.write(similarity_results)
         else:
             st.warning("No column pairs selected. Please add column pairs to calculate similarity.")
 
+    # Filtering Section
+    with st.expander("🔍 Filter Results", expanded=True):
+        if "similarity_results" in st.session_state:
+            similarity_df = st.session_state.similarity_results
 
+            # Identify numeric columns (e.g., columns with "similarity" in their name)
+            numeric_columns = [col for col in similarity_df.columns if "similarity" in col.lower() and pd.api.types.is_numeric_dtype(similarity_df[col])]
+
+            # Slider for numeric filtering
+            for col in numeric_columns:
+                min_val, max_val = float(similarity_df[col].min()), float(similarity_df[col].max())
+                selected_range = st.slider(
+                    f"Filter by {col} range:",
+                    min_val,
+                    max_val,
+                    (min_val, max_val),
+                    step=(max_val - min_val) / 100
+                )
+                similarity_df = similarity_df[(similarity_df[col] >= selected_range[0]) & (similarity_df[col] <= selected_range[1])]
+
+            # Text input for string filtering
+            string_columns = [col for col in similarity_df.columns if pd.api.types.is_string_dtype(similarity_df[col])]
+            for col in string_columns:
+                filter_text = st.text_input(f"Filter by text in {col} (case-insensitive):", key=f"filter_{col}")
+                if filter_text:
+                    similarity_df = similarity_df[similarity_df[col].str.contains(filter_text, case=False, na=False)]
+
+            # Display filtered results
+            st.write("### Filtered Results:")
+            st.write(similarity_df)
+        else:
+            st.warning("No similarity results available. Please calculate similarity first.")
