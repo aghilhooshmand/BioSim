@@ -1,28 +1,12 @@
 version: '3.8'
 
 services:
-  # Streamlit Web App Service
   biosim_web:
     build: .
     ports:
-      - "8601:8601"  # Map Streamlit's default port to the host machine
+      - "8601:8601"  # Expose Streamlit port
     volumes:
-      - .:/app  # Mounts the current directory to the container for real-time changes
+      - .:/app  # Mount current directory for real-time updates
     environment:
       - PYTHONUNBUFFERED=1
-      - "8601:8601"  # Ensure Docker maps external 8601 to container 8601
-    command: streamlit run BioSimilarity_interface.py --server.port=8601 --server.address=0.0.0.0
-
-
-  # Command-Line App Service
-  biosim_cmd:
-    build: .
-    volumes:
-      - .:/app
-    environment:
-      - PYTHONUNBUFFERED=1
-    command: ["python", "BioSimilarity.py"]
-    stdin_open: true
-    tty: true
-
-# Optional: volumes and networks can be defined here if necessary
+    command: streamlit run BioSimilarity_interface.py --server.port=8601 --server.address=0.0.0.0 --server.maxUploadSize=1000 --server.maxMessageSize=500

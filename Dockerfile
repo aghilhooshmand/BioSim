@@ -13,5 +13,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Expose the Streamlit port
 EXPOSE 8601
 
-# Default command to run the Streamlit app (you can change this later based on the Compose config)
-CMD ["streamlit", "run", "BioSimilarity_interface.py","--server.maxUploadSize=1000","--server.maxMessageSize=500"]
+# Default command to run the Streamlit app
+CMD ["streamlit", "run", "BioSimilarity_interface.py", "--server.port=8601", "--server.address=0.0.0.0", "--server.maxUploadSize=1000", "--server.maxMessageSize=500"]
+
